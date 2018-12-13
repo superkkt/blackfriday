@@ -889,13 +889,25 @@ func autoLink(p *Markdown, data []byte, offset int) (int, *Node) {
 	unescapeText(&uLink, data[:linkEnd])
 
 	if uLink.Len() > 0 {
-		node := NewNode(Link)
-		node.Destination = uLink.Bytes()
-		node.AppendChild(text(uLink.Bytes()))
-		return linkEnd, node
+		if isImageLink(uLink.Bytes()) {
+			node := NewNode(Image)
+			node.Destination = uLink.Bytes()
+			return linkEnd, node
+		} else {
+			node := NewNode(Link)
+			node.Destination = uLink.Bytes()
+			node.AppendChild(text(uLink.Bytes()))
+			return linkEnd, node
+		}
 	}
 
 	return linkEnd, nil
+}
+
+var validImageLink = regexp.MustCompile(`(?i)\b.jpg|\b.jpeg|\b.png|\b.gif|\b.bmp`)
+
+func isImageLink(link []byte) bool {
+	return validImageLink.Match(link)
 }
 
 func isEndOfLink(char byte) bool {
